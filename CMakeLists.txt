@@ -11,6 +11,7 @@ SET(${PROJECT_NAME}_SOVERSION 1)
 SET(LIB ${PROJECT_NAME})
 
 SET(CMAKE_VERBOSE_MAKEFILE TRUE)
+SET(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 #################################################################
 # DEFINE PATHS
