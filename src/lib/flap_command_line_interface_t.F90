@@ -72,7 +72,9 @@ type, extends(object), public :: command_line_interface
     procedure, private :: get_args_from_invocation        !< Get CLAs from CLI invocation.
     procedure, private :: get_cla                         !< Get CLA (single) value from CLAs list parsed.
     procedure, private :: get_cla_list                    !< Get CLA multiple values from CLAs list parsed.
+#ifdef _R16P_SUPPORTED
     procedure, private :: get_cla_list_varying_R16P       !< Get CLA multiple values from CLAs list parsed, varying size, R16P.
+#endif
     procedure, private :: get_cla_list_varying_R8P        !< Get CLA multiple values from CLAs list parsed, varying size, R8P.
     procedure, private :: get_cla_list_varying_R4P        !< Get CLA multiple values from CLAs list parsed, varying size, R4P.
     procedure, private :: get_cla_list_varying_I8P        !< Get CLA multiple values from CLAs list parsed, varying size, I8P.
@@ -826,6 +828,7 @@ contains
   if (present(error)) error = self%error
   endsubroutine get_cla_list
 
+#ifdef _R16P_SUPPORTED
   subroutine get_cla_list_varying_R16P(self, val, pref, args, group, switch, position, error)
   !< Get CLA multiple values from CLAs list parsed with varying size list, real(R16P).
   !<
@@ -878,6 +881,7 @@ contains
   endif
   if (present(error)) error = self%error
   endsubroutine get_cla_list_varying_R16P
+#endif
 
   subroutine get_cla_list_varying_R8P(self, val, pref, args, group, switch, position, error)
   !< Get CLA multiple values from CLAs list parsed with varying size list, real(R8P).
