@@ -21,13 +21,28 @@ DSRC = src/
 LIBS =
 ifeq "$(COMPILER)" "gnu"
   FC    = gfortran
-  OPTSC = -cpp -c -frealloc-lhs -O2  -J $(DMOD)
+  OPTSC = -cpp -c -frealloc-lhs -O2 -fPIC  -J $(DMOD)
   OPTSL = -J $(DMOD)
 endif
 ifeq "$(COMPILER)" "ibm"
   FC    = bgxlf2008_r
   OPTSC = -c -O2 -qmoddir=$(DMOD) -I$(DMOD)
   OPTSL = -qmoddir=$(DMOD) -I$(DMOD)
+endif
+ifeq "$(COMPILER)" "intel"
+  FC    = ifort
+  OPTSC = -fpp -c  -O2 -fPIC -module $(DMOD)
+  OPTSL = -module $(DMOD)
+endif
+ifeq "$(COMPILER)" "pgi"
+  FC    = pgfortran
+  OPTSC = -Mpreprocess -c  -O2 -fpic -module $(DMOD)
+  OPTSL = -module $(DMOD)
+endif
+ifeq "$(COMPILER)" "nag"
+  FC    = nagfor
+  OPTSC = -fpp -c  -O2 -PIC -mdir $(DMOD)
+  OPTSL = -mdir $(DMOD)
 endif
 VPATH   = $(DSRC) $(DOBJ) $(DMOD)
 MKDIRS  = $(DOBJ) $(DMOD) $(DEXE)
