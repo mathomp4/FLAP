@@ -1,8 +1,10 @@
 #################################################################
 # HEADER
 #################################################################
-CMAKE_MINIMUM_REQUIRED(VERSION 2.8.7)
+CMAKE_MINIMUM_REQUIRED(VERSION 2.8.11)
 SET(CMAKE_ALLOW_LOOSE_LOOP_CONSTRUCTS TRUE)
+
+CMAKE_POLICY(SET CMP0022 NEW)
 
 PROJECT(FLAP Fortran)
 
@@ -10,38 +12,9 @@ SET(${PROJECT_NAME}_VERSION 0.0.1)
 SET(${PROJECT_NAME}_SOVERSION 1)
 SET(LIB ${PROJECT_NAME})
 
-SET(CMAKE_VERBOSE_MAKEFILE TRUE)
 SET(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-#################################################################
-# DEFINE PATHS
-#################################################################
-
-SET(CMAKE_PATH ${CMAKE_SOURCE_DIR}/CMake)
-SET(SRC_PATH ${CMAKE_SOURCE_DIR}/src)
-SET(LIB_PATH ${SRC_PATH}/lib)
-SET(TESTS_PATH ${SRC_PATH}/tests)
-SET(THIRDPARTY_PATH ${SRC_PATH}/third_party)
-
-#SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/CMake/Modules/")
-
-
-#################################################################
-# BUILD PATHS
-#################################################################
-
-SET(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)
-SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
-SET(CMAKE_Fortran_MODULE_DIRECTORY ${PROJECT_BINARY_DIR}/modules)
-SET(MODULE_OUTPUT_PATH ${CMAKE_Fortran_MODULE_DIRECTORY})
-SET(THIRDPARTY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/third_party)
-INCLUDE_DIRECTORIES(${CMAKE_Fortran_MODULE_DIRECTORY})
-
-#################################################################
-# ADD INCLUDE DIRS
-#################################################################
-
-SET(${PROJECT_NAME}_INCLUDE_DIRS ${MODULE_OUTPUT_PATH})
+SET(FLAP_CONFIG_MODULE ${CMAKE_CURRENT_LIST_DIR}/CMake/FLAPConfig.cmake.in)
 
 #################################################################
 # CONFIGURATION TYPES & BUILD MODE
@@ -136,69 +109,55 @@ ENDIF()
 #################################################################
 
 include(ExternalProject)
-SET(PENF_LIB PENF)
 
-SET(${PENF_LIB}_SRC_PATH ${THIRDPARTY_PATH}/PENF)
-MESSAGE(STATUS "${PENF_LIB}_SRC_PATH: ${${PENF_LIB}_SRC_PATH}")
-SET(${PENF_LIB}_BINARY_PATH ${THIRDPARTY_OUTPUT_PATH}/${PENF_LIB})
-EXTERNALPROJECT_Add(${PENF_LIB}
-    DOWNLOAD_COMMAND ""
-    SOURCE_DIR ${${PENF_LIB}_SRC_PATH}
-    BINARY_DIR ${${PENF_LIB}_BINARY_PATH}
-    INSTALL_DIR ${INSTALL_PREFIX}
-    # Fortran compiler must be forced in order to link external projects from the main project
-    CONFIGURE_COMMAND cmake -DBUILD_SHARED_LIBS=${BUILD_SHARED_LIBS} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DCMAKE_Fortran_COMPILER=${CMAKE_Fortran_COMPILER} ${${PENF_LIB}_SRC_PATH}
-    BUILD_COMMAND cmake --build .
-    TEST_COMMAND ""
-    INSTALL_COMMAND ""
+EXTERNALPROJECT_Add(PENF
+  PREFIX      ${CMAKE_CURRENT_BINARY_DIR}/PENF
+  SOURCE_DIR  ${CMAKE_CURRENT_SOURCE_DIR}/src/third_party/PENF
+  INSTALL_DIR ${CMAKE_INSTALL_PREFIX}
+
+  CMAKE_ARGS
+    -DBUILD_SHARED_LIBS=${BUILD_SHARED_LIBS} 
+    -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+    -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
+    -DCMAKE_POSITION_INDEPENDENT_CODE=${CMAKE_POSITION_INDEPENDENT_CODE}
 )
+SET(PENF_LIBRARY ${CMAKE_INSTALL_PREFIX}/lib/libPENF.a)
+SET(PENF_INCLUDE_DIR ${CMAKE_INSTALL_PREFIX}/include/PENF)
 
-# The order of the libraries reveals the right linking order
-SET(PENF_LIBS ${${PENF_LIB}_BINARY_PATH}/lib/lib${PENF_LIB}.a)
-LINK_DIRECTORIES(${THIRDPARTY_OUTPUT_PATH}/${PENF_LIB}/lib)
-INCLUDE_DIRECTORIES(${THIRDPARTY_OUTPUT_PATH}/${PENF_LIB}/modules)
-SET(${PROJECT_NAME}_INCLUDE_DIRS ${${PROJECT_NAME}_INCLUDE_DIRS} ${THIRDPARTY_OUTPUT_PATH}/${PENF_LIB}/modules)
 
-# FACE #
-include(ExternalProject)
-SET(FACE_LIB FACE)
+EXTERNALPROJECT_Add(FACE
+  PREFIX      ${CMAKE_CURRENT_BINARY_DIR}/FACE
+  SOURCE_DIR  ${CMAKE_CURRENT_SOURCE_DIR}/src/third_party/FACE
+  INSTALL_DIR ${CMAKE_INSTALL_PREFIX}
 
-SET(${FACE_LIB}_SRC_PATH ${THIRDPARTY_PATH}/FACE)
-MESSAGE(STATUS "${FACE_LIB}_SRC_PATH: ${${FACE_LIB}_SRC_PATH}")
-SET(${FACE_LIB}_BINARY_PATH ${THIRDPARTY_OUTPUT_PATH}/${FACE_LIB})
-EXTERNALPROJECT_Add(${FACE_LIB}
-    DOWNLOAD_COMMAND ""
-    SOURCE_DIR ${${FACE_LIB}_SRC_PATH}
-    BINARY_DIR ${${FACE_LIB}_BINARY_PATH}
-    INSTALL_DIR ${INSTALL_PREFIX}
-    # Fortran compiler must be forced in order to link external projects from the main project
-    CONFIGURE_COMMAND cmake -DBUILD_SHARED_LIBS=${BUILD_SHARED_LIBS} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DCMAKE_Fortran_COMPILER=${CMAKE_Fortran_COMPILER} ${${FACE_LIB}_SRC_PATH}
-    BUILD_COMMAND cmake --build .
-    TEST_COMMAND ""
-    INSTALL_COMMAND ""
+  CMAKE_ARGS
+    -DBUILD_SHARED_LIBS=${BUILD_SHARED_LIBS} 
+    -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+    -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
+    -DCMAKE_POSITION_INDEPENDENT_CODE=${CMAKE_POSITION_INDEPENDENT_CODE}
 )
-
-# The order of the libraries reveals the right linking order
-SET(FACE_LIBS ${${FACE_LIB}_BINARY_PATH}/lib/lib${FACE_LIB}.a)
-LINK_DIRECTORIES(${THIRDPARTY_OUTPUT_PATH}/${FACE_LIB}/lib)
-INCLUDE_DIRECTORIES(${THIRDPARTY_OUTPUT_PATH}/${FACE_LIB}/modules)
-SET(${PROJECT_NAME}_INCLUDE_DIRS ${${PROJECT_NAME}_INCLUDE_DIRS} ${THIRDPARTY_OUTPUT_PATH}/${FACE_LIB}/modules)
+SET(FACE_LIBRARY ${CMAKE_INSTALL_PREFIX}/lib/libFACE.a)
+SET(FACE_INCLUDE_DIR ${CMAKE_INSTALL_PREFIX}/include/FACE)
 
 #################################################################
 # ADD SOURCE SUBDIRS
 #################################################################
 
-ADD_SUBDIRECTORY(${LIB_PATH})
+ADD_SUBDIRECTORY(src/lib)
 IF(${PROJECT_NAME}_ENABLE_TESTS)
-    ADD_SUBDIRECTORY(${THIRDPARTY_PATH}/fortran_tester)
-    ADD_SUBDIRECTORY(${TESTS_PATH})
+    EXTERNALPROJECT_Add(fortran_tester
+      PREFIX      ${CMAKE_CURRENT_BINARY_DIR}/fortran_tester
+      SOURCE_DIR  ${CMAKE_CURRENT_SOURCE_DIR}/src/third_party/fortran_tester
+      INSTALL_DIR ${CMAKE_INSTALL_PREFIX}
+
+      CMAKE_ARGS
+        -DBUILD_SHARED_LIBS=${BUILD_SHARED_LIBS} 
+        -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+        -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
+        -DCMAKE_POSITION_INDEPENDENT_CODE=${CMAKE_POSITION_INDEPENDENT_CODE}
+    )
+    SET(fortran_tester_LIBRARY ${CMAKE_INSTALL_PREFIX}/lib/libfortran_tester.a)
+    SET(fortran_tester_INCLUDE_DIR ${CMAKE_INSTALL_PREFIX}/include/fortran_tester)
+
+    ADD_SUBDIRECTORY(src/tests)
 ENDIF()
-
-#################################################################
-# CREATE CONFIG FILE
-#################################################################
-
-CONFIGURE_FILE(${CMAKE_PATH}/${PROJECT_NAME}Config.cmake.in 
-               ${PROJECT_BINARY_DIR}/${PROJECT_NAME}Config.cmake
-               @ONLY)
-
