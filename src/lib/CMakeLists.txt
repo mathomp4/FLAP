@@ -1,14 +1,16 @@
-#################################################################
-# Search F90 files recursively in all subdirs
-#################################################################
+# set type specific output defaults
+include(GNUInstallDirs)
 
-FILE(GLOB_RECURSE LIB_SRC *.f90 *.F90 *.c)
-SET(LIB_SRC ${LIB_SRC} PARENT_SCOPE)
+SET(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR}")
+SET(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR}")
+SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/${CMAKE_INSTALL_BINDIR}")
+SET(CMAKE_Fortran_MODULE_DIRECTORY "${PROJECT_BINARY_DIR}/modules")
 
 #################################################################
 # Library target
 #################################################################
-ADD_LIBRARY(FLAP 
+set(LIB FLAP)
+add_library(${LIB} 
         flap_command_line_arguments_group_t.f90
         flap_command_line_argument_t.F90
         flap_command_line_interface_t.F90
@@ -16,13 +18,21 @@ ADD_LIBRARY(FLAP
         flap_object_t.f90
         flap_utils_m.f90
 )
-SET_TARGET_PROPERTIES(FLAP PROPERTIES 
-        Fortran_MODULE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/modules
+add_library(${NAMESPACE}${LIB} ALIAS ${LIB})
+
+target_include_directories(${LIB}
+    INTERFACE
+        $<BUILD_INTERFACE:${CMAKE_Fortran_MODULE_DIRECTORY}>
 )
 
-INCLUDE(GNUInstallDirs)
+set_target_properties(${LIB} PROPERTIES
+    VERSION
+        ${PROJECT_VERSION}
+    SOVERSION
+        ${PROJECT_VERSION_MAJOR}
+)
 
-TARGET_LINK_LIBRARIES(FLAP 
+TARGET_LINK_LIBRARIES(${LIB} 
         PUBLIC
                 $<BUILD_INTERFACE:${FACE_LIBRARY}>
                 $<BUILD_INTERFACE:${PENF_LIBRARY}>
@@ -30,41 +40,28 @@ TARGET_LINK_LIBRARIES(FLAP
                 $<INSTALL_INTERFACE:PENF::PENF>
 )
 IF(CMAKE_BUILD_TYPE MATCHES "DEBUG")
-        TARGET_LINK_LIBRARIES(FLAP INTERFACE -lgcov)
+   TARGET_LINK_LIBRARIES(${LIB} INTERFACE -lgcov)
 ENDIF()
-TARGET_INCLUDE_DIRECTORIES(FLAP 
+TARGET_INCLUDE_DIRECTORIES(${LIB} 
         PUBLIC
                 $<BUILD_INTERFACE:${FACE_INCLUDE_DIR}>
                 $<BUILD_INTERFACE:${PENF_INCLUDE_DIR}>
         INTERFACE
-                $<BUILD_INTERFACE:${CMAKE_INSTALL_FULL_INCLUDEDIR}/FLAP>
-                $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/FLAP>
+        $<BUILD_INTERFACE:${CMAKE_INSTALL_FULL_INCLUDEDIR}/${LIB}>
+        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/${LIB}>
 )
-ADD_DEPENDENCIES(FLAP PENF FACE)
+ADD_DEPENDENCIES(${LIB} PENF FACE)
 
-INSTALL(TARGETS FLAP
-        EXPORT FLAP-export
-        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-)
-INSTALL(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/modules/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/FLAP)
-INSTALL(EXPORT FLAP-export
-        FILE
-                FLAPTargets.cmake
-        NAMESPACE
-                FLAP::
-        DESTINATION
-                ${CMAKE_INSTALL_LIBDIR}/cmake/FLAP
-)
-INCLUDE(CMakePackageConfigHelpers)
-configure_package_config_file(${PROJECT_SOURCE_DIR}/CMake/FLAPConfig.cmake.in
-        ${CMAKE_CURRENT_BINARY_DIR}/FLAPConfig.cmake
-        INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/FLAP
+# installation and export of targets
+install(DIRECTORY ${CMAKE_Fortran_MODULE_DIRECTORY}/
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}
+    COMPONENT Development
 )
 
-INSTALL(FILES 
-        ${CMAKE_CURRENT_BINARY_DIR}/FLAPConfig.cmake 
-        DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/FLAP
-)
-EXPORT(EXPORT FLAP-export FILE ${CMAKE_CURRENT_BINARY_DIR}/FLAPConfig.cmake NAMESPACE FLAP::)
-EXPORT(PACKAGE FLAP)
+install(TARGETS ${LIB} EXPORT ${TARGETS_EXPORT_NAME}
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT Development
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT RuntimeLibraries
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT RuntimeLibraries
+    INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}
+    )
+

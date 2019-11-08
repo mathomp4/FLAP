@@ -1,20 +1,24 @@
-#################################################################
-# HEADER
-#################################################################
-CMAKE_MINIMUM_REQUIRED(VERSION 2.8.11)
-SET(CMAKE_ALLOW_LOOSE_LOOP_CONSTRUCTS TRUE)
+# The target of the library FLAP is exported
+# as FLAP::FLAP to a package config file for FLAP
+#
+# usage:
+#     find_package(FLAP)
+#     ...
+#     target_link_library(<target> FLAP)
+#
+# the config file is generatet in the build and install directories
 
-CMAKE_POLICY(SET CMP0022 NEW)
+cmake_minimum_required(VERSION 3.10...3.13)
+project(FLAP VERSION 4.5.6 LANGUAGES Fortran)
 
-PROJECT(FLAP Fortran)
+set(CMAKE_POSITION_INDEPENDENT_CODE ON) 
 
-SET(${PROJECT_NAME}_VERSION 0.0.1)
-SET(${PROJECT_NAME}_SOVERSION 1)
-SET(LIB ${PROJECT_NAME})
+# seach path for additional cmake modules
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake/Modules)
 
-SET(CMAKE_POSITION_INDEPENDENT_CODE ON)
-
-SET(FLAP_CONFIG_MODULE ${CMAKE_CURRENT_LIST_DIR}/CMake/FLAPConfig.cmake.in)
+# set export variables needed for building
+set(TARGETS_EXPORT_NAME "${PROJECT_NAME}Targets")
+set(NAMESPACE "${PROJECT_NAME}::")
 
 #################################################################
 # CONFIGURATION TYPES & BUILD MODE
@@ -22,7 +26,7 @@ SET(FLAP_CONFIG_MODULE ${CMAKE_CURRENT_LIST_DIR}/CMake/FLAPConfig.cmake.in)
 
 SET(CMAKE_CONFIGURATION_TYPES DEBUG RELEASE)
 IF(NOT CMAKE_BUILD_TYPE)
-  SET(CMAKE_BUILD_TYPE DEBUG CACHE STRING
+   SET(CMAKE_BUILD_TYPE RELEASE CACHE STRING
       "Choose the type of build, options are: NONE DEBUG RELEASE"
       FORCE)
 
@@ -32,15 +36,6 @@ ENDIF(NOT CMAKE_BUILD_TYPE)
 IF(NOT ${PROJECT_NAME}_ENABLE_TESTS)
     OPTION(${PROJECT_NAME}_ENABLE_TESTS "Enable/disable tests compilation" OFF)
 ENDIF(NOT ${PROJECT_NAME}_ENABLE_TESTS)
-
-#################################################################
-# STATIC LIBRARIES
-#################################################################
-# Try to search first static libraries
-IF(NOT ${BUILD_SHARED_LIBS})
-    SET(CMAKE_FIND_LIBRARY_SUFFIXES ".a ${CMAKE_FIND_LIBRARY_SUFFIXES}")
-    SET( HDF5_USE_STATIC_LIBRARIES ON)
-ENDIF()
 
 
 #################################################################
@@ -165,3 +160,41 @@ IF(${PROJECT_NAME}_ENABLE_TESTS)
 
     ADD_SUBDIRECTORY(src/tests)
 ENDIF()
+
+# generate package config files
+include(GNUInstallDirs)
+set(project_config "${PROJECT_NAME}Config.cmake")
+set(cmake_files_dir "${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles")
+set(config_install_dir "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}")
+set(config_build_dir "${CMAKE_CURRENT_BINARY_DIR}/${config_install_dir}")
+
+# export targets for install
+install(EXPORT ${TARGETS_EXPORT_NAME}
+    NAMESPACE
+        ${NAMESPACE}
+    DESTINATION
+        ${config_install_dir}
+    COMPONENT Development
+)
+
+# export targets into build
+export(EXPORT ${TARGETS_EXPORT_NAME}
+    NAMESPACE
+        ${NAMESPACE}
+    FILE
+        ${config_build_dir}/${TARGETS_EXPORT_NAME}.cmake
+)
+
+#create package config
+include(CMakePackageConfigHelpers)
+configure_package_config_file(cmake/PackageConfig.cmake.in ${cmake_files_dir}/${project_config}
+    INSTALL_DESTINATION ${config_install_dir}
+)
+install(FILES ${cmake_files_dir}/${project_config}
+    DESTINATION ${config_install_dir}
+)
+
+configure_package_config_file(cmake/PackageConfig.cmake.in ${config_build_dir}/${project_config}
+    INSTALL_DESTINATION ${config_build_dir}
+    INSTALL_PREFIX ${CMAKE_CURRENT_BINARY_DIR}
+)
