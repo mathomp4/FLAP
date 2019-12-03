@@ -1,6 +1,6 @@
 [submodule "src/third_party/PENF"]
   path = src/third_party/PENF
-  url = git@github.com:mathomp4/PENF.git
+  url = ../PENF.git
   branch = add_fpic
 [submodule "src/third_party/fortran_tester"]
   path = src/third_party/fortran_tester
@@ -8,5 +8,5 @@
   branch = master
 [submodule "src/third_party/FACE"]
   path = src/third_party/FACE
-  url = git@github.com:mathomp4/FACE.git
+  url = ../FACE.git
   branch = add_fpic
