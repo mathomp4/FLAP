@@ -59,7 +59,13 @@ ADD_DEFINITIONS(-D${CMAKE_Fortran_COMPILER_ID})
 
 message(STATUS "COMPILER INFO: ${CMAKE_Fortran_COMPILER_ID} - ${Fortran_COMPILER_NAME}")
 
-IF (${CMAKE_Fortran_COMPILER_ID} STREQUAL "GNU" OR Fortran_COMPILER_NAME MATCHES "gfortran*")
+IF (${CMAKE_Fortran_COMPILER_ID} STREQUAL "PGI")
+  # pgfortran 
+  set(FORTRAN_FLAGS "-Mpreprocess -Mbackslash ${EXTRA_FLAGS} ")
+  set (CMAKE_Fortran_FLAGS "${FORTRAN_FLAGS} ${MACROS} ${INCLUDES} " CACHE STRING "" FORCE)
+  set (CMAKE_Fortran_FLAGS_RELEASE "-O3 ${EXTRA_FLAGS} " CACHE STRING "" FORCE)
+  set (CMAKE_Fortran_FLAGS_DEBUG   "-g -traceback -Mbounds ${EXTRA_FLAGS} " CACHE STRING "" FORCE)
+ELSEIF (${CMAKE_Fortran_COMPILER_ID} STREQUAL "GNU" OR Fortran_COMPILER_NAME MATCHES "gfortran*")
   # gfortran 
   set(FORTRAN_FLAGS "-ffree-line-length-0 -cpp -Wimplicit-interface ${EXTRA_FLAGS} ")
   set (CMAKE_Fortran_FLAGS "${FORTRAN_FLAGS} ${MACROS} ${INCLUDES} " CACHE STRING "" FORCE)
